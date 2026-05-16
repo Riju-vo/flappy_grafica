@@ -28,8 +28,10 @@ public class AppFlappyBird {
 
     private static final float PIPE_WIDTH = 0.18f;
     private static final float GAP_HEIGHT = 0.48f;
-    private static final float PIPE_SPEED = 0.62f;
-    private static final float SPAWN_INTERVAL = 1.5f;
+    private static final float BASE_PIPE_SPEED = 0.62f;
+    private static final float MAX_PIPE_SPEED = 1.10f;
+    private static final float BASE_SPAWN_INTERVAL = 1.5f;
+    private static final float MIN_SPAWN_INTERVAL = 0.85f;
     private static final float GAP_MIN_CENTER = -0.45f;
     private static final float GAP_MAX_CENTER = 0.45f;
     private static final float PIPE_SPAWN_X = 1.2f;
@@ -42,6 +44,7 @@ public class AppFlappyBird {
     private float renderTime;
 
     private boolean prevSpace;
+    private boolean prevJumpP2;
     private boolean prevR;
 
     public void run() {
@@ -79,13 +82,17 @@ public class AppFlappyBird {
         renderer.init();
         birdRenderer = new BirdRenderer();
 
-        Bird bird = new Bird(BIRD_X, 0.0f, BIRD_WIDTH, BIRD_HEIGHT, GRAVITY, JUMP_IMPULSE, MAX_FALL_SPEED);
+        Bird bird1 = new Bird(BIRD_X, 0.15f, BIRD_WIDTH, BIRD_HEIGHT, GRAVITY, JUMP_IMPULSE, MAX_FALL_SPEED);
+        Bird bird2 = new Bird(BIRD_X, -0.15f, BIRD_WIDTH, BIRD_HEIGHT, GRAVITY, JUMP_IMPULSE, MAX_FALL_SPEED);
         game = new GameWorld(
-                bird,
+                bird1,
+                bird2,
                 PIPE_WIDTH,
                 GAP_HEIGHT,
-                PIPE_SPEED,
-                SPAWN_INTERVAL,
+                BASE_PIPE_SPEED,
+                MAX_PIPE_SPEED,
+                BASE_SPAWN_INTERVAL,
+                MIN_SPAWN_INTERVAL,
                 GAP_MIN_CENTER,
                 GAP_MAX_CENTER,
                 PIPE_SPAWN_X,
@@ -100,10 +107,18 @@ public class AppFlappyBird {
 
         boolean spaceNow = GLFW.glfwGetKey(window, GLFW.GLFW_KEY_SPACE) == GLFW.GLFW_PRESS;
         if (spaceNow && !prevSpace) {
-            game.startAndJump();
+            game.jumpPlayer1();
             updateTitle();
         }
         prevSpace = spaceNow;
+
+        boolean jumpP2Now = GLFW.glfwGetKey(window, GLFW.GLFW_KEY_W) == GLFW.GLFW_PRESS
+                || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_UP) == GLFW.GLFW_PRESS;
+        if (jumpP2Now && !prevJumpP2) {
+            game.jumpPlayer2();
+            updateTitle();
+        }
+        prevJumpP2 = jumpP2Now;
 
         boolean rNow = GLFW.glfwGetKey(window, GLFW.GLFW_KEY_R) == GLFW.GLFW_PRESS;
         if (rNow && !prevR && game.state() == GameState.GAME_OVER) {
@@ -115,9 +130,14 @@ public class AppFlappyBird {
 
     private void update(float dt) {
         GameState prevState = game.state();
-        int prevScore = game.score();
+        int prevScore1 = game.score1();
+        int prevScore2 = game.score2();
+        int prevLevel = game.currentLevel();
         game.update(dt);
-        if (prevState != game.state() || prevScore != game.score()) {
+        if (prevState != game.state()
+                || prevScore1 != game.score1()
+                || prevScore2 != game.score2()
+                || prevLevel != game.currentLevel()) {
             updateTitle();
         }
     }
@@ -143,8 +163,14 @@ public class AppFlappyBird {
             }
         }
 
-        Bird bird = game.bird();
-        birdRenderer.draw(bird, renderer, renderTime);
+        if (game.player1Alive()) {
+            Bird bird1 = game.bird1();
+            birdRenderer.draw(bird1, renderer, renderTime, 0.98f, 0.85f, 0.20f, 0.92f, 0.72f, 0.12f);
+        }
+        if (game.player2Alive()) {
+            Bird bird2 = game.bird2();
+            birdRenderer.draw(bird2, renderer, renderTime, 0.98f, 0.84f, 0.96f, 0.98f, 0.64f, 0.90f);
+        }
 
         if (game.state() == GameState.GAME_OVER) {
             renderer.drawRect(0.0f, 0.0f, 2.0f, 0.22f, 0.15f, 0.18f, 0.22f);
@@ -152,13 +178,16 @@ public class AppFlappyBird {
     }
 
     private void updateTitle() {
-        String base = "Flappy Bird OpenGL | Puntos: " + game.score();
+        String base = "Flappy Bird OpenGL | J1: " + game.score1()
+                + " | J2: " + game.score2()
+                + " | Nivel: " + game.currentLevel()
+                + " | Vel: " + String.format("%.2f", game.currentPipeSpeed());
         if (game.state() == GameState.START) {
-            GLFW.glfwSetWindowTitle(window, base + " | SPACE para empezar");
+            GLFW.glfwSetWindowTitle(window, base + " | SPACE(J1) / W o UP(J2) para empezar");
             return;
         }
         if (game.state() == GameState.GAME_OVER) {
-            GLFW.glfwSetWindowTitle(window, base + " | GAME OVER - SPACE o R para reiniciar");
+            GLFW.glfwSetWindowTitle(window, base + " | GAME OVER - SPACE/W para reiniciar o R para reset");
             return;
         }
         GLFW.glfwSetWindowTitle(window, base);

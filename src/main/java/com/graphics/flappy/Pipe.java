@@ -6,7 +6,8 @@ package com.graphics.flappy;
 public class Pipe {
     private float x;
     private final float gapCenterY;
-    private boolean scored;
+    private boolean scoredByPlayer1;
+    private boolean scoredByPlayer2;
 
     public Pipe(float x, float gapCenterY) {
         this.x = x;
@@ -25,12 +26,19 @@ public class Pipe {
         return gapCenterY;
     }
 
-    public boolean scored() {
-        return scored;
+    public boolean scoredByPlayer1() {
+        return scoredByPlayer1;
     }
 
-    public void markScored() {
-        scored = true;
+    public boolean scoredByPlayer2() {
+        return scoredByPlayer2;
+    }
+
+    public void markScoredByPlayer1() {
+        scoredByPlayer1 = true;
+    }
+
+    public void markScoredByPlayer2() {
+        scoredByPlayer2 = true;
     }
 }
-

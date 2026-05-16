@@ -5,7 +5,17 @@ package com.graphics.flappy;
  */
 public class BirdRenderer {
 
-    public void draw(Bird bird, ShapeRenderer renderer, float timeSeconds) {
+    public void draw(
+            Bird bird,
+            ShapeRenderer renderer,
+            float timeSeconds,
+            float bodyR,
+            float bodyG,
+            float bodyB,
+            float wingR,
+            float wingG,
+            float wingB
+    ) {
         float tilt = clamp(bird.velY() * 0.7f, -0.55f, 0.45f);
         float flap = (float) Math.sin(timeSeconds * 14.0f);
         float jumpBoost = clamp(bird.velY() * 0.9f, -0.20f, 0.35f);
@@ -17,7 +27,7 @@ public class BirdRenderer {
         float h = bird.height();
 
         // Cuerpo principal.
-        renderer.drawRect(bx, by, w * 1.00f, h * 0.82f, tilt, 0.98f, 0.85f, 0.20f);
+        renderer.drawRect(bx, by, w * 1.00f, h * 0.82f, tilt, bodyR, bodyG, bodyB);
 
         // Cola.
         renderer.drawTriangle(
@@ -35,7 +45,7 @@ public class BirdRenderer {
                 w * 0.58f,
                 h * 0.34f,
                 tilt + wingAngle,
-                0.92f, 0.72f, 0.12f);
+                wingR, wingG, wingB);
 
         // Pico (triangulo distinguible).
         renderer.drawTriangle(

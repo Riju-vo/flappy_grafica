@@ -8,6 +8,7 @@ public class Pipe {
     private final float gapCenterY;
     private boolean scoredByPlayer1;
     private boolean scoredByPlayer2;
+    private boolean scoredByPlayer3;
 
     public Pipe(float x, float gapCenterY) {
         this.x = x;
@@ -34,11 +35,19 @@ public class Pipe {
         return scoredByPlayer2;
     }
 
+    public boolean scoredByPlayer3() {
+        return scoredByPlayer3;
+    }
+
     public void markScoredByPlayer1() {
         scoredByPlayer1 = true;
     }
 
     public void markScoredByPlayer2() {
         scoredByPlayer2 = true;
+    }
+
+    public void markScoredByPlayer3() {
+        scoredByPlayer3 = true;
     }
 }

@@ -179,6 +179,68 @@ Cerrar entregables solicitados por enunciado.
 
 ---
 
+## Adicion A - Tercer jugador simultaneo
+
+### Objetivo
+Extender la partida de 2 a 3 jugadores manteniendo puntaje, colisiones y estado vivo/muerto independientes.
+
+### Tareas
+- Crear `bird3` en `GameWorld` y en `AppFlappyBird`.
+- Agregar estado propio:
+  - `score3`.
+  - `player3Alive`.
+  - marcas de puntaje por tuberia para J3.
+- Definir controles:
+  - Jugador 1: `SPACE`.
+  - Jugador 2: `W` o flecha arriba.
+  - Jugador 3: `ENTER` o `RIGHT SHIFT`.
+- Actualizar reglas:
+  - Cada jugador suma puntos solo cuando sigue vivo.
+  - Cada jugador puede morir por separado.
+  - La partida termina por muerte solo cuando mueren los tres.
+- Actualizar render:
+  - Dibujar el tercer pajaro con color propio.
+  - Mostrar J3 en el titulo/HUD.
+
+### Criterios de validacion
+- Los tres jugadores pueden saltar con controles independientes.
+- Si uno muere, los otros dos pueden seguir.
+- El puntaje de J3 sube al pasar tuberias.
+- `GAME_OVER` ocurre solo cuando los tres pierden.
+
+---
+
+## Adicion B - Fin de juego por puntaje objetivo
+
+### Objetivo
+Agregar una condicion de victoria sin reutilizar `GAME_OVER`, para diferenciar claramente perder de llegar al final.
+
+### Decision propuesta
+Usar un objetivo configurable, por ejemplo:
+
+- `TARGET_SCORE = 10`
+
+Cuando cualquier jugador llegue a ese puntaje, el juego entra a un nuevo estado:
+
+- `GameState.FINISHED`
+
+### Tareas
+- Agregar `FINISHED` al enum `GameState`.
+- Crear constante de puntaje objetivo en `AppFlappyBird` o `GameWorld`.
+- Detectar victoria despues de actualizar puntajes.
+- Bloquear fisica/spawn mientras el estado sea `FINISHED`.
+- Permitir reiniciar desde `FINISHED` con `R` o con una tecla de salto.
+- Mostrar mensaje diferenciado:
+  - `FIN - Jx llego al objetivo`.
+  - Mantener `GAME OVER` solo para muerte de todos los jugadores.
+
+### Criterios de validacion
+- Llegar al puntaje objetivo no muestra `GAME_OVER`.
+- El titulo/HUD informa que la partida termino por objetivo.
+- El reinicio funciona tanto desde `GAME_OVER` como desde `FINISHED`.
+
+---
+
 ## Orden recomendado de implementacion (practico)
 
 1. Fase 1 (refactor minimo).
@@ -186,6 +248,8 @@ Cerrar entregables solicitados por enunciado.
 3. Fase 2 (pajaro compuesto) sobre la nueva estructura.
 4. Fase 4 (dificultad progresiva).
 5. Fase 5 (interfaz y mejora visual/sonora).
-6. Fase 6 y Fase 7 (defensa y entrega).
+6. Adicion A (tercer jugador simultaneo).
+7. Adicion B (fin por puntaje objetivo con estado propio).
+8. Fase 6 y Fase 7 (defensa y entrega).
 
 Razon: introducir primero la estructura y la logica multi-jugador reduce retrabajo en render, colisiones y puntaje.

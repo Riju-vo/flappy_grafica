@@ -6,11 +6,12 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Logica central del juego (2 jugadores + dificultad progresiva).
+ * Logica central del juego (3 jugadores + dificultad progresiva).
  */
 public class GameWorld {
     private final Bird bird1;
     private final Bird bird2;
+    private final Bird bird3;
     private final List<Pipe> pipes;
     private final Random random;
 
@@ -24,17 +25,22 @@ public class GameWorld {
     private final float gapMaxCenter;
     private final float spawnX;
     private final float despawnX;
+    private final int targetScore;
 
     private GameState state;
     private float spawnTimer;
     private int score1;
     private int score2;
+    private int score3;
     private boolean player1Alive;
     private boolean player2Alive;
+    private boolean player3Alive;
+    private int winningPlayer;
 
     public GameWorld(
             Bird bird1,
             Bird bird2,
+            Bird bird3,
             float pipeWidth,
             float gapHeight,
             float basePipeSpeed,
@@ -44,10 +50,12 @@ public class GameWorld {
             float gapMinCenter,
             float gapMaxCenter,
             float spawnX,
-            float despawnX
+            float despawnX,
+            int targetScore
     ) {
         this.bird1 = bird1;
         this.bird2 = bird2;
+        this.bird3 = bird3;
         this.pipeWidth = pipeWidth;
         this.gapHeight = gapHeight;
         this.basePipeSpeed = basePipeSpeed;
@@ -58,25 +66,30 @@ public class GameWorld {
         this.gapMaxCenter = gapMaxCenter;
         this.spawnX = spawnX;
         this.despawnX = despawnX;
+        this.targetScore = targetScore;
         this.pipes = new ArrayList<>();
         this.random = new Random();
         reset();
     }
 
     public void reset() {
-        bird1.reset(0.15f);
-        bird2.reset(-0.15f);
+        bird1.reset(0.35f);
+        bird2.reset(0.0f);
+        bird3.reset(-0.35f);
         pipes.clear();
         spawnTimer = 0.0f;
         score1 = 0;
         score2 = 0;
+        score3 = 0;
         player1Alive = true;
         player2Alive = true;
+        player3Alive = true;
+        winningPlayer = 0;
         state = GameState.START;
     }
 
     public void jumpPlayer1() {
-        if (state == GameState.GAME_OVER) {
+        if (isTerminalState()) {
             reset();
         }
         if (!player1Alive) {
@@ -87,7 +100,7 @@ public class GameWorld {
     }
 
     public void jumpPlayer2() {
-        if (state == GameState.GAME_OVER) {
+        if (isTerminalState()) {
             reset();
         }
         if (!player2Alive) {
@@ -95,6 +108,17 @@ public class GameWorld {
         }
         state = GameState.PLAYING;
         bird2.jump();
+    }
+
+    public void jumpPlayer3() {
+        if (isTerminalState()) {
+            reset();
+        }
+        if (!player3Alive) {
+            return;
+        }
+        state = GameState.PLAYING;
+        bird3.jump();
     }
 
     public void update(float dt) {
@@ -123,6 +147,11 @@ public class GameWorld {
             pipe.moveLeft(currentPipeSpeed, dt);
 
             updateScore(pipe);
+            updateFinishedState();
+            if (state == GameState.FINISHED) {
+                return;
+            }
+
             updateCollisions(pipe);
             updateGameOverState();
             if (state == GameState.GAME_OVER) {
@@ -149,6 +178,13 @@ public class GameWorld {
                 player2Alive = false;
             }
         }
+
+        if (player3Alive) {
+            bird3.update(dt);
+            if (bird3.top() >= 1.0f || bird3.bottom() <= -1.0f) {
+                player3Alive = false;
+            }
+        }
     }
 
     private void updateScore(Pipe pipe) {
@@ -161,6 +197,28 @@ public class GameWorld {
             pipe.markScoredByPlayer2();
             score2++;
         }
+
+        if (player3Alive && pipe.x() + (pipeWidth * 0.5f) < bird3.x() && !pipe.scoredByPlayer3()) {
+            pipe.markScoredByPlayer3();
+            score3++;
+        }
+    }
+
+    private void updateFinishedState() {
+        if (score1 >= targetScore) {
+            winningPlayer = 1;
+            state = GameState.FINISHED;
+            return;
+        }
+        if (score2 >= targetScore) {
+            winningPlayer = 2;
+            state = GameState.FINISHED;
+            return;
+        }
+        if (score3 >= targetScore) {
+            winningPlayer = 3;
+            state = GameState.FINISHED;
+        }
     }
 
     private void updateCollisions(Pipe pipe) {
@@ -170,12 +228,19 @@ public class GameWorld {
         if (player2Alive && collides(bird2, pipe)) {
             player2Alive = false;
         }
+        if (player3Alive && collides(bird3, pipe)) {
+            player3Alive = false;
+        }
     }
 
     private void updateGameOverState() {
-        if (!player1Alive && !player2Alive) {
+        if (!player1Alive && !player2Alive && !player3Alive) {
             state = GameState.GAME_OVER;
         }
+    }
+
+    private boolean isTerminalState() {
+        return state == GameState.GAME_OVER || state == GameState.FINISHED;
     }
 
     private void spawnPipe() {
@@ -218,12 +283,20 @@ public class GameWorld {
         return bird2;
     }
 
+    public Bird bird3() {
+        return bird3;
+    }
+
     public boolean player1Alive() {
         return player1Alive;
     }
 
     public boolean player2Alive() {
         return player2Alive;
+    }
+
+    public boolean player3Alive() {
+        return player3Alive;
     }
 
     public List<Pipe> pipes() {
@@ -246,8 +319,20 @@ public class GameWorld {
         return score2;
     }
 
+    public int score3() {
+        return score3;
+    }
+
     public int maxScore() {
-        return Math.max(score1, score2);
+        return Math.max(score1, Math.max(score2, score3));
+    }
+
+    public int targetScore() {
+        return targetScore;
+    }
+
+    public int winningPlayer() {
+        return winningPlayer;
     }
 
     public GameState state() {
